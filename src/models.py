@@ -51,13 +51,30 @@ class UserGet(UserBase):
 
 class UserUpdate(SQLModel):
     email: EmailStr | None = None
-    username: str | None = None
-    password: str | None = None
-    full_name: str | None = None
+    username: str | None = Field(default=None, min_length=3, max_length=20, regex=r'^[a-zA-Z0-9_]+$')
+    password: str | None = Field(default=None, min_length=8, max_length=128)
+    full_name: str | None = Field(default=None, min_length=1, max_length=100, regex=r'^[a-zA-Z\s]+$')
     birth_date: date | None = None
-    postal_code: str | None = None
-    city: str | None = None
+    postal_code: str | None = Field(default=None, min_length=4, max_length=10)
+    city: str | None = Field(default=None, min_length=1, max_length=85, regex=r'^[a-zA-Z\s]+$')
 
+    @field_validator("birth_date")
+    def check_birth_date(cls, value):
+        if value > datetime.date.today():
+            raise ValueError("Birth date cannot be in the future")
+        return value
+
+    @field_validator('password')
+    def check_password_complexity(cls, value):
+        if not any(char.isupper() for char in value):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(char.islower() for char in value):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(char.isdigit() for char in value):
+            raise ValueError("Password must contain at least one digit")
+        if not any(char in "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" for char in value):
+            raise ValueError("Password must contain at least one special character")
+        return value
 
 class ListingBase(SQLModel):
     author_id: uuid.UUID = Field(nullable=False, foreign_key="user.id", ondelete="CASCADE")
