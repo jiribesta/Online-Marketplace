@@ -10,6 +10,7 @@ from dependencies import get_db_session, oauth2_scheme, generate_unique_session_
 router = APIRouter()
 
 obtain_session: Annotated[Session, Depends(get_db_session)]
+get_logged_in_user: Annotated[User, Depends(get_current_user)]
 
 @router.post("/users", status_code=201, response_model=UserGet)
 async def create_user(session: obtain_session, user: UserCreate, response: Response):
@@ -25,6 +26,10 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
 
     response.headers["Location"] = "/users/me"
     return new_user
+
+@router.get("/users", response_model=UserGet)
+async def get_user(user: get_logged_in_user):
+    return user
 
 @router.post("/tokens")
 async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
@@ -42,7 +47,7 @@ async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequ
     return {"access_token": new_token, "token_type": "bearer"}
 
 @router.delete("/tokens", status_code=204)
-async def logout(session: obtain_session, user: Annotated[User, Depends(get_current_user)]):
+async def logout(session: obtain_session, user: get_logged_in_user):
     user.session_token = None
 
     session.add(user)
