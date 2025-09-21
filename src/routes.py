@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
 from models import User, UserCreate, UserGet, UserUpdate
-from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, hash_password, authenticate_user
+from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user
 
 router = APIRouter()
 
@@ -17,6 +17,7 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
     new_user = User.model_validate(user, update={"hashed_password": new_hashed_password})
 
     check_unique_new_user(session, new_user)
+    new_user = ensure_unique_user_id(session, new_user)
 
     session.add(new_user)
     session.commit()
@@ -25,7 +26,7 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
     response.headers["Location"] = "/users/me"
     return new_user
 
-@router.post("/token")
+@router.post("/tokens")
 async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     authenticated_user = authenticate_user(session, form_data.username, form_data.password)
 
@@ -39,3 +40,12 @@ async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequ
     session.commit()
 
     return {"access_token": new_token, "token_type": "bearer"}
+
+@router.delete("/tokens", status_code=204)
+async def logout(session: obtain_session, user: Annotated[User, Depends(get_current_user)]):
+    user.session_token = None
+
+    session.add(user)
+    session.commit()
+
+    return

@@ -11,7 +11,7 @@ from database import engine
 from models import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="tokens")
 
 def generate_unique_session_token(session: Session) -> str:
     while True:

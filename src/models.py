@@ -25,7 +25,7 @@ class UserBase(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str = Field(nullable=False)
-    session_token: str | None = None
+    session_token: str | None = Field(default=None, index=True)
     signup_timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     listings: list["Listing"] = Relationship(back_populates="author", cascade_delete=True)
