@@ -149,7 +149,7 @@ class ListingBase(SQLModel):
     author_id: uuid.UUID = Field(nullable=False, foreign_key="user.id", ondelete="CASCADE")
     title: str = Field(nullable=False)
     description: str | None = Field(default=None)
-    category: ListingCategory = Field(nullable=False)
+    category: ListingCategory = Field(nullable=False, index=True)
     price: float = Field(default=0, nullable=False)
 
 class Listing(ListingBase, table=True):
