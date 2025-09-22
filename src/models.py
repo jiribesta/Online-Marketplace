@@ -1,4 +1,5 @@
 from datetime import datetime, date, timezone
+from enum import Enum
 import uuid
 
 from pydantic import EmailStr, field_validator
@@ -76,10 +77,79 @@ class UserUpdate(SQLModel):
             raise ValueError("Password must contain at least one special character")
         return value
 
+class ListingCategory(str, Enum):
+    LAPTOPS = "laptops"
+    DESKTOPS = "desktops"
+    CONSOLES = "consoles"
+    PC_ACCESSORIES = "pc accessories"
+    PC_COMPONENTS = "pc components"
+    SPARE_ELECTRONIC_PARTS = "spare electronic parts"
+    SOFTWARE = "software"
+    GAMES = "games"
+    PHONES = "phones"
+    PHONE_CASES = "phone cases"
+    PHONE_ACCESSORIES = "phone accessories"
+    SMART_WATCHES = "smart watches"
+    TVS = "tvs"
+    CAMERAS = "cameras"
+    DRONES = "drones"
+    BODY_CARE_DEVICES = "body care devices"
+    HOME_APPLIANCES = "home appliances"
+    OTHER_ELECTRONICS = "other electronics"
+    CARS = "cars"
+    CAR_ACCESSORIES = "car accessories"
+    CAR_PARTS = "car parts"
+    MOTORCYCLES = "motorcycles"
+    MOTORCYCLE_PARTS = "motorcycle parts"
+    INDOOR_FURNITURE = "indoor furniture"
+    OUTDOOR_FURNITURE = "outdoor furniture"
+    KITCHENWARE = "kitchenware"
+    TOOLS = "tools"
+    SMART_HOME_ELECTRONICS = "smart home electronics"
+    BUILDING_MATERIALS = "building materials"
+    ANIMALS = "animals"
+    BIKES = "bikes"
+    FISHING_TOOLS = "fishing tools"
+    FISHING_SUPPLIES = "fishing supplies"
+    OUTDOOR_AND_HIKING_EQUIPMENT = "outdoor and hiking equipment"
+    WORKOUT_EQUIPMENT = "workout equipment"
+    WATER_SPORTS_EQUIPMENT = "water sports equipment"
+    WINTER_SPORTS_EQUIPMENT = "winter sports equipment"
+    OTHER_SPORTS_EQUIPMENT = "other sports equipment"
+    BOARD_GAMES = "board games"
+    CARD_GAMES = "card games"
+    PARTY_GAMES = "party games"
+    PUZZLES = "puzzles"
+    SETS = "sets"
+    FILMS = "films"
+    MUSIC = "music"
+    MUSICAL INSTRUMENTS = "musical instruments"
+    MUSIC EQUIPMENT = "music equipment"
+    BOOKS = "books"
+    MAGAZINES = "magazines"
+    COMICS = "comics"
+    TEXTBOOKS = "textbooks"
+    MAPS_AND_GUIDES = "maps and guides"
+    OTHER_PRINTED_MEDIA = "other printed media"
+    MENS_CLOTHING = "men's clothing"
+    WOMENS_CLOTHING = "women's clothing"
+    UNDERWEAR = "underwear"
+    BAGS = "bags"
+    HANDBAGS = "handbags"
+    FASHION_ACCESSORIES = "fashion accessories"
+    MENS_SHOES = "men's shoes"
+    WOMENS_SHOES = "women's shoes"
+    JEWELRY = "jewelry"
+    WRISTWATCHES = "whistwatches"
+    MEDICAL_SUPPLIES = "medical supplies"
+    COLLECTIBLES = "collectibles"
+    OTHER = "other"
+
 class ListingBase(SQLModel):
     author_id: uuid.UUID = Field(nullable=False, foreign_key="user.id", ondelete="CASCADE")
     title: str = Field(nullable=False)
     description: str | None = Field(default=None)
+    category: ListingCategory = Field(nullable=False)
     price: float = Field(default=0, nullable=False)
 
 class Listing(ListingBase, table=True):
@@ -98,6 +168,7 @@ class ListingGet(ListingBase):
 class ListingUpdate(ListingBase):
     title: str | None = None
     description: str | None = None
+    category: ListingCategory | None = None
     price: float | None = None
 
 

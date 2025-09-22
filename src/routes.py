@@ -67,7 +67,7 @@ async def update_user(session: obtain_session, user: get_logged_in_user, updated
 async def delete_user(session: obtain_session, user: get_logged_in_user)
     session.delete(user)
     session.commit()
-    
+
     return
 
 @router.post("/tokens")
