@@ -63,6 +63,13 @@ async def update_user(session: obtain_session, user: get_logged_in_user, updated
 
     return user
 
+@router.delete("/users/me", status_code=204)
+async def delete_user(session: obtain_session, user: get_logged_in_user)
+    session.delete(user)
+    session.commit()
+    
+    return
+
 @router.post("/tokens")
 async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     authenticated_user = authenticate_user(session, form_data.username, form_data.password)
