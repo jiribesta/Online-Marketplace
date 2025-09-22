@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
+from sqlalchemy.exc import IntegrityError
 
 from models import User, UserCreate, UserGet, UserUpdate
 from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user
@@ -27,8 +28,39 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
     response.headers["Location"] = "/users/me"
     return new_user
 
-@router.get("/users", response_model=UserGet)
+@router.get("/users/me", response_model=UserGet)
 async def get_user(user: get_logged_in_user):
+    return user
+
+@router.patch("/users/me", response_model=UserGet)
+async def update_user(session: obtain_session, user: get_logged_in_user, updated_user: UserUpdate):
+    updated_data = updated_user.model_dump(exclude_unset=True)
+
+    extra_data = {}
+    if "password" in updated_data:
+        new_password = updated_user["password"]
+        new_hashed_password = hash_password(new_password)
+        extra_data["hashed_password"] = new_hashed_password
+
+    user.sqlmodel_update(updated_data, update=extra_data)
+
+    try:
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    # check for uniqueness violation
+    except IntegrityError as excep:
+        session.rollback()
+        error_message = str(e.orig)
+        if "UNIQUE constraint failed" in error_message:
+            if "email" in error_message:
+                raise HTTPException(status_code=400, detail="Email already exists")
+            elif "username" in error_message:
+                raise HTTPException(status_code=400, detail="Username already exists")
+            else:
+                raise HTTPException(status_code=400, detail="Unique constraint violation")
+        raise # if the integrity error was somehow not related to uniqueness
+
     return user
 
 @router.post("/tokens")
