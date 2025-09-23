@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate, Listing, ListingCreate, ListingGet, ListingUpdate
+from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingUpdate
 from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user, verify_listing_owner, get_user_by_id, get_listing_by_id
 
 router = APIRouter()
@@ -112,6 +112,22 @@ async def create_listing(session: obtain_session, user: get_logged_in_user, list
 
     response.headers["Location"] = f"/listings/{new_listing.id}"
     return new_listing
+
+@router.get("/listings", response_model=list[ListingGet])
+async def query_listings(
+    session: obtain_session, 
+    offset: Annotated[int, Query(default=0, ge=0, lt=4294967296)],
+    limit: Annotated[int, Query(default=32, gt=0, le=256)],
+    category: Annotated[ListingCategory | None, Query(default=None)]
+):
+    if category is not None:
+        query_statement = select(Listing).where(Listing.category == category).offset(offset).limit(limit)
+    else:
+        query_statement = select(Listing).offset(offset).limit(limit)
+        
+    listings = session.exec(query_statement).all()
+
+    return listings
 
 @router.get("/listings/{listing_id}", response_model=ListingGet)
 async def get_listing(session: obtain_session, listing_id: Annotated[uuid.UUID, Path()]):
