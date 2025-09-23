@@ -170,10 +170,10 @@ class ListingGet(ListingBase):
     author_id: uuid.UUID
 
 class ListingUpdate(ListingBase):
-    title: str | None = None
-    description: str | None = None
-    category: ListingCategory | None = None
-    price: float | None = None
+    title: str | None = Field(default=None, max_length=150)
+    description: str | None = Field(default=None, max_length=1000)
+    category: ListingCategory | None = Field(default=None)
+    price: float | None = Field(default=None, ge=0)
 
 
 #class Bookmark(SQLModel, table=True):

@@ -1,5 +1,6 @@
-import secrets
 from typing import Annotated
+import secrets
+import uuid
 
 import bcrypt
 from fastapi import Depends, HTTPException
@@ -45,6 +46,24 @@ def ensure_unique_listing_id(session: Session, listing: Listing):
         listing.id = uuid.uuid4()
     return listing
 
+def get_user_by_id(sesison: Session, user_id: uuid.UUID) -> User:
+    user = session.get(User, user_id)
+    if user is None:
+        raise HTTPException(
+            status=404,
+            detail="User not found"
+        )
+    return user
+
+def get_listing_by_id(sesison: Session, listing_id: uuid.UUID) -> Listing:
+    listing = session.get(Listing, listing_id)
+    if listing is None:
+        raise HTTPException(
+            status=404,
+            detail="Listing not found"
+        )
+    return listing
+
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
 
@@ -88,4 +107,11 @@ def get_db_session():
 
 def get_current_user(authorization_token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     return get_user_by_token(authorization_token)
-    
+
+def verify_listing_owner(listing_owner_id: uuid.UUID, user_id: uuid.UUID)
+    if listing_owner_id != user_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )

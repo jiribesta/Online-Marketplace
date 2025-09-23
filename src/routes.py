@@ -6,7 +6,7 @@ from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
 from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate, Listing, ListingCreate, ListingGet, ListingUpdate
-from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user
+from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user, verify_listing_owner, get_user_by_id, get_listing_by_id
 
 router = APIRouter()
 
@@ -34,25 +34,19 @@ async def get_user(user: get_logged_in_user):
 
 @router.get("/users/{user_id}", response_model=UserGetPublic)
 async def get_user_public(session: obtain_session):
-    user = session.get(User, user_id)
-    if user is None:
-        raise HTTPException(
-            status=404,
-            detail="User not found"
-        )
-    return user
+    return get_user_by_id(session, user_id)
 
 @router.patch("/users/me", response_model=UserGet)
 async def update_user(session: obtain_session, user: get_logged_in_user, updated_user: UserUpdate):
-    updated_data = updated_user.model_dump(exclude_unset=True)
+    updated_user_data = updated_user.model_dump(exclude_unset=True)
 
     extra_data = {}
-    if "password" in updated_data:
+    if "password" in updated_user_data:
         new_password = updated_user["password"]
         new_hashed_password = hash_password(new_password)
         extra_data["hashed_password"] = new_hashed_password
 
-    user.sqlmodel_update(updated_data, update=extra_data)
+    user.sqlmodel_update(updated_user_data, update=extra_data)
 
     try:
         session.add(user)
@@ -126,4 +120,20 @@ async def get_listing(session: obtain_session):
             status=404,
             detail="Listing not found"
         )
+    return listing
+
+@router.patch("listings/{listing_id}", response_model=ListingGet)
+async def update_listing(session: obtain_session, user: get_logged_in_user, updated_listing: ListingUpdate):
+    listing = get_listing_by_id(session, listing_id)
+
+    verify_listing_owner(listing.author_id, user.id)
+
+    updated_listing_data = updated_listing.model_dump(exclude_unset=True)
+
+    listing.sqlmodel_update(updated_listing_data)
+
+    session.add(listing)
+    session.commit()
+    session.refresh(listing)
+
     return listing
