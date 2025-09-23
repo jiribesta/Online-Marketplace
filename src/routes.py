@@ -116,3 +116,14 @@ async def logout(session: obtain_session, user: get_logged_in_user):
 
     response.headers["Location"] = f"/listings/{new_listing.id}"
     return new_listing
+
+@router.get("/listings/{listing_id}", response_model=ListingGet)
+async def get_listing(session: obtain_session):
+    listing = session.get(Listing, listing_id)
+
+    if listing is None:
+        raise HTTPException(
+            status=404,
+            detail="Listing not found"
+        )
+    return listing
