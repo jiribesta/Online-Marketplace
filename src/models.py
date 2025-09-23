@@ -50,6 +50,9 @@ class UserCreate(UserBase):
 class UserGet(UserBase):
     id: uuid.UUID
 
+class UserGetPublic():
+    username: str = Field(unique=True, min_length=3, max_length=20, regex=r'^[a-zA-Z0-9_]+$', nullable=False)
+
 class UserUpdate(SQLModel):
     email: EmailStr | None = None
     username: str | None = Field(default=None, min_length=3, max_length=20, regex=r'^[a-zA-Z0-9_]+$')
@@ -123,8 +126,8 @@ class ListingCategory(str, Enum):
     SETS = "sets"
     FILMS = "films"
     MUSIC = "music"
-    MUSICAL INSTRUMENTS = "musical instruments"
-    MUSIC EQUIPMENT = "music equipment"
+    MUSICAL_INSTRUMENTS = "musical instruments"
+    MUSIC_EQUIPMENT = "music equipment"
     BOOKS = "books"
     MAGAZINES = "magazines"
     COMICS = "comics"
@@ -146,14 +149,14 @@ class ListingCategory(str, Enum):
     OTHER = "other"
 
 class ListingBase(SQLModel):
-    author_id: uuid.UUID = Field(nullable=False, foreign_key="user.id", ondelete="CASCADE")
-    title: str = Field(nullable=False)
-    description: str | None = Field(default=None)
+    title: str = Field(max_length=150, nullable=False)
+    description: str | None = Field(default=None, max_length=1000)
     category: ListingCategory = Field(nullable=False, index=True)
-    price: float = Field(default=0, nullable=False)
+    price: float = Field(default=0, ge=0, nullable=False)
 
 class Listing(ListingBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    author_id: uuid.UUID = Field(nullable=False, foreign_key="user.id", ondelete="CASCADE")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -164,6 +167,7 @@ class ListingCreate(ListingBase):
 
 class ListingGet(ListingBase):
     id: uuid.UUID
+    author_id: uuid.UUID
 
 class ListingUpdate(ListingBase):
     title: str | None = None
