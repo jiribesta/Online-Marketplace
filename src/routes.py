@@ -98,8 +98,8 @@ async def logout(session: obtain_session, user: get_logged_in_user):
 
     return
 
- @router.post("/listings", status_code=201, response_model=ListingGet)
- async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate):
+@router.post("/listings", status_code=201, response_model=ListingGet)
+async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate):
     new_listing = Listing.model_validate(ListingCreate, update={"author_id" : user.id})
 
     new_listing = ensure_unique_listing_id(session, new_listing)
@@ -113,16 +113,9 @@ async def logout(session: obtain_session, user: get_logged_in_user):
 
 @router.get("/listings/{listing_id}", response_model=ListingGet)
 async def get_listing(session: obtain_session):
-    listing = session.get(Listing, listing_id)
+    return get_listing_by_id(session, listing_id)
 
-    if listing is None:
-        raise HTTPException(
-            status=404,
-            detail="Listing not found"
-        )
-    return listing
-
-@router.patch("listings/{listing_id}", response_model=ListingGet)
+@router.patch("/listings/{listing_id}", response_model=ListingGet)
 async def update_listing(session: obtain_session, user: get_logged_in_user, updated_listing: ListingUpdate):
     listing = get_listing_by_id(session, listing_id)
 
@@ -137,3 +130,14 @@ async def update_listing(session: obtain_session, user: get_logged_in_user, upda
     session.refresh(listing)
 
     return listing
+
+@router.delete("/listings/{listing_id}", status_code=204)
+async def delete_listing(session: obtain_session, user: get_logged_in_user):
+    listing = get_listing_by_id(session, listing_id)
+
+    verify_listing_owner(listing.author_id, user.id)
+
+    session.delete(listing)
+    session.commit()
+
+    return
