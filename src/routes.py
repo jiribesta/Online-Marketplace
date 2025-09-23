@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from models import User, UserCreate, UserGet, UserGetPublic, UserUpdate
+from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate
 from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user
 
 router = APIRouter()
@@ -28,7 +28,7 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
     response.headers["Location"] = "/users/me"
     return new_user
 
-@router.get("/users/me", response_model=UserGet)
+@router.get("/users/me", response_model=UserGetPrivate)
 async def get_user(user: get_logged_in_user):
     return user
 

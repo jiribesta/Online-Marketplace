@@ -47,7 +47,7 @@ class UserCreate(UserBase):
             raise ValueError("Password must contain at least one special character")
         return value
 
-class UserGet(UserBase):
+class UserGetPrivate(UserBase):
     id: uuid.UUID
 
 class UserGetPublic():
