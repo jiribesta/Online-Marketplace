@@ -108,7 +108,7 @@ def get_db_session():
 def get_current_user(authorization_token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     return get_user_by_token(authorization_token)
 
-def verify_listing_owner(listing_owner_id: uuid.UUID, user_id: uuid.UUID)
+def verify_listing_owner(listing_owner_id: uuid.UUID, user_id: uuid.UUID):
     if listing_owner_id != user_id:
         raise HTTPException(
             status_code=401,

@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
@@ -33,7 +33,7 @@ async def get_user(user: get_logged_in_user):
     return user
 
 @router.get("/users/{user_id}", response_model=UserGetPublic)
-async def get_user_public(session: obtain_session):
+async def get_user_public(session: obtain_session, user_id: Annotated[uuid.UUID, Path()]):
     return get_user_by_id(session, user_id)
 
 @router.patch("/users/me", response_model=UserGet)
@@ -68,11 +68,12 @@ async def update_user(session: obtain_session, user: get_logged_in_user, updated
     return user
 
 @router.delete("/users/me", status_code=204)
-async def delete_user(session: obtain_session, user: get_logged_in_user)
+async def delete_user(session: obtain_session, user: get_logged_in_user):
     session.delete(user)
     session.commit()
 
     return
+
 
 @router.post("/tokens")
 async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
@@ -89,7 +90,7 @@ async def login(session: obtain_session, form_data: Annotated[OAuth2PasswordRequ
 
     return {"access_token": new_token, "token_type": "bearer"}
 
-@router.delete("/tokens", status_code=204)
+@router.delete("/tokens")
 async def logout(session: obtain_session, user: get_logged_in_user):
     user.session_token = None
 
@@ -97,6 +98,7 @@ async def logout(session: obtain_session, user: get_logged_in_user):
     session.commit()
 
     return
+
 
 @router.post("/listings", status_code=201, response_model=ListingGet)
 async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate):
@@ -112,11 +114,11 @@ async def create_listing(session: obtain_session, user: get_logged_in_user, list
     return new_listing
 
 @router.get("/listings/{listing_id}", response_model=ListingGet)
-async def get_listing(session: obtain_session):
+async def get_listing(session: obtain_session, listing_id: Annotated[uuid.UUID, Path()]):
     return get_listing_by_id(session, listing_id)
 
 @router.patch("/listings/{listing_id}", response_model=ListingGet)
-async def update_listing(session: obtain_session, user: get_logged_in_user, updated_listing: ListingUpdate):
+async def update_listing(session: obtain_session, user: get_logged_in_user, listing_id: Annotated[uuid.UUID, Path()], updated_listing: ListingUpdate):
     listing = get_listing_by_id(session, listing_id)
 
     verify_listing_owner(listing.author_id, user.id)
@@ -132,7 +134,7 @@ async def update_listing(session: obtain_session, user: get_logged_in_user, upda
     return listing
 
 @router.delete("/listings/{listing_id}", status_code=204)
-async def delete_listing(session: obtain_session, user: get_logged_in_user):
+async def delete_listing(session: obtain_session, user: get_logged_in_user, listing_id: Annotated[uuid.UUID, Path()]):
     listing = get_listing_by_id(session, listing_id)
 
     verify_listing_owner(listing.author_id, user.id)
