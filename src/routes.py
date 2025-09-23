@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingUpdate
+from models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingGetWithUser, ListingUpdate
 from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user, verify_listing_owner, get_user_by_id, get_listing_by_id
 
 router = APIRouter()
@@ -32,7 +32,7 @@ async def create_user(session: obtain_session, user: UserCreate, response: Respo
 async def get_user(user: get_logged_in_user):
     return user
 
-@router.get("/users/{user_id}", response_model=UserGetPublic)
+@router.get("/users/{user_id}", response_model=UserGetPublicWithListings)
 async def get_user_public(session: obtain_session, user_id: Annotated[uuid.UUID, Path()]):
     return get_user_by_id(session, user_id)
 
@@ -101,7 +101,7 @@ async def logout(session: obtain_session, user: get_logged_in_user):
 
 
 @router.post("/listings", status_code=201, response_model=ListingGet)
-async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate):
+async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate, response: Response):
     new_listing = Listing.model_validate(ListingCreate, update={"author_id" : user.id})
 
     new_listing = ensure_unique_listing_id(session, new_listing)
@@ -113,7 +113,7 @@ async def create_listing(session: obtain_session, user: get_logged_in_user, list
     response.headers["Location"] = f"/listings/{new_listing.id}"
     return new_listing
 
-@router.get("/listings", response_model=list[ListingGet])
+@router.get("/listings", response_model=list[ListingGetWithUser])
 async def query_listings(
     session: obtain_session, 
     offset: Annotated[int, Query(default=0, ge=0, lt=4294967296)],
@@ -124,12 +124,12 @@ async def query_listings(
         query_statement = select(Listing).where(Listing.category == category).offset(offset).limit(limit)
     else:
         query_statement = select(Listing).offset(offset).limit(limit)
-        
+
     listings = session.exec(query_statement).all()
 
     return listings
 
-@router.get("/listings/{listing_id}", response_model=ListingGet)
+@router.get("/listings/{listing_id}", response_model=ListingGetWithUser)
 async def get_listing(session: obtain_session, listing_id: Annotated[uuid.UUID, Path()]):
     return get_listing_by_id(session, listing_id)
 

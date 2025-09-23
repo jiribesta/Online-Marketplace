@@ -176,6 +176,13 @@ class ListingUpdate(ListingBase):
     price: float | None = Field(default=None, ge=0)
 
 
+class UserGetPublicWithListings(UserGetPublic):
+    listings: list[ListingGet] = []
+
+class ListingGetWithUser(ListingGet):
+    owner: UserGetPublic
+
+
 #class Bookmark(SQLModel, table=True):
 #    user_id: uuid.UUID = Field(primary_key=True, foreign_key=user.id)
 #    listing_id: uuid.UUID = Field(primary_key=True, foreign_key=listing.id)
