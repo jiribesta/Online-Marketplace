@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate
+from models import User, UserCreate, UserGetPrivate, UserGetPublic, UserUpdate, Listing, ListingCreate, ListingGet, ListingUpdate
 from dependencies import get_db_session, oauth2_scheme, generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, get_current_user
 
 router = APIRouter()
@@ -103,3 +103,16 @@ async def logout(session: obtain_session, user: get_logged_in_user):
     session.commit()
 
     return
+
+ @router.post("/listings", status_code=201, response_model=ListingGet)
+ async def create_listing(session: obtain_session, user: get_logged_in_user, listing: ListingCreate):
+    new_listing = Listing.model_validate(ListingCreate, update={"author_id" : user.id})
+
+    new_listing = ensure_unique_listing_id(session, new_listing)
+
+    session.add(new_listing)
+    session.commit()
+    session.refresh(new_listing)
+
+    response.headers["Location"] = f"/listings/{new_listing.id}"
+    return new_listing

@@ -8,7 +8,7 @@ from sqlmodel import Session
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
 from database import engine
-from models import User
+from models import User, Listing
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="tokens")
@@ -19,11 +19,6 @@ def generate_unique_session_token(session: Session) -> str:
         user_with_matching_token = session.exec(Select(User).where(User.session_token == new_token))
         if not user_with_matching_token:
             return new_token
-
-def ensure_unique_user_id(session: Session, user: User) -> User:
-    while session.get(User, user.id) is not None:
-        user.id = uuid.uuid4()
-    return user
 
 def check_unique_new_user(session: Session, new_user: User) -> None:
     existing_user = session.exec(select(User).where(or_(User.username == new_user.username, User.email == new_user.email))).first()
@@ -39,6 +34,16 @@ def check_unique_new_user(session: Session, new_user: User) -> None:
         status=409,
         detail="Email already exists"
     )
+
+def ensure_unique_user_id(session: Session, user: User) -> User:
+    while session.get(User, user.id) is not None:
+        user.id = uuid.uuid4()
+    return user
+
+def ensure_unique_listing_id(session: Session, listing: Listing):
+    while session.get(Listing, listing.id) is not None:
+        listing.id = uuid.uuid4()
+    return listing
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()

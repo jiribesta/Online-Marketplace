@@ -150,7 +150,7 @@ class ListingCategory(str, Enum):
 
 class ListingBase(SQLModel):
     title: str = Field(max_length=150, nullable=False)
-    description: str | None = Field(default=None, max_length=1000)
+    description: str = Field(default="", max_length=1000)
     category: ListingCategory = Field(nullable=False, index=True)
     price: float = Field(default=0, ge=0, nullable=False)
 
