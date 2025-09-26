@@ -3,10 +3,11 @@ import os
 import sys
 
 CONFIG_FILE_DIR = "../"
+CONFIG_FILE_NAME = "config.json"
 
 def load_config():
     try:
-        with open(os.path.join(CONFIG_FILE_DIR, "config.json"), "r") as config_file:
+        with open(os.path.join(CONFIG_FILE_DIR, CONFIG_FILE_NAME), "r") as config_file:
             return json.load(config_file)
     except Exception as e:
         print(f"Unexpected error when obtaining config data: {e}")
