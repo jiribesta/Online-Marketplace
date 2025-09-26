@@ -6,5 +6,8 @@
         "port": 5432,
         "db_name": "marketplace"
     },
-    "log_file_path": "./log.txt"
+
+    "log_file_path": "./log.txt",
+    
+    "images_folder_path": "./images"
 }
