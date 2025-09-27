@@ -7,7 +7,7 @@
         "db_name": "marketplace"
     },
 
-    "log_file_path": "./log.txt",
+    "log_file_path": "./log.log",
     
     "images_folder_path": "./images"
 }
