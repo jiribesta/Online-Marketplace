@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from models import SQLModel
-from routes import router
+from src.models import SQLModel
+from src.routes import router
 
 # Manage startup and shutdown events
 @asynccontextmanager

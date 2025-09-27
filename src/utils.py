@@ -8,8 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
-from dependencies import get_db_session
-from models import User, Listing
+from .models import User, Listing
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="tokens")
@@ -82,23 +81,6 @@ def authenticate_user(session: Session, username: str, password: str) -> User:
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return user
-        
-
-def get_user_by_token(token: str, session: Annotated[Session, Depends(get_db_session)]) -> User:
-    try:
-        user: User = session.exec(select(User).where(User.session_token == token)).one()
-
-    except NoResultFound:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    except MultipleResultsFound:
-        # write to log file as an unexpected error
-        raise
-
     return user
 
 def verify_listing_owner(listing_owner_id: uuid.UUID, user_id: uuid.UUID):

@@ -1,20 +1,21 @@
 from typing import Annotated
+import uuid
 
-from fastapi import APIRouter, HTTPException, Path, Query, Response
+from fastapi import APIRouter, HTTPException, Path, Query, Response, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingGetWithUser, ListingUpdate
-from utils import generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, verify_listing_owner, get_user_by_id, get_listing_by_id
-from dependencies import get_db_session, get_current_user
+from .models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingGetWithUser, ListingUpdate
+from .utils import generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, verify_listing_owner, get_user_by_id, get_listing_by_id
+from .dependencies import get_db_session, get_current_user
 
 router = APIRouter()
 
-obtain_session: Annotated[Session, Depends(get_db_session)]
-get_logged_in_user: Annotated[User, Depends(get_current_user)]
+obtain_session = Annotated[Session, Depends(get_db_session)]
+get_logged_in_user = Annotated[User, Depends(get_current_user)]
 
-@router.post("/users", status_code=201, response_model=UserGet)
+@router.post("/users", status_code=201, response_model=UserGetPrivate)
 async def create_user(session: obtain_session, user: UserCreate, response: Response):
     new_hashed_password = hash_password(user.password)
     new_user = User.model_validate(user, update={"hashed_password": new_hashed_password})
@@ -37,7 +38,7 @@ async def get_user(user: get_logged_in_user):
 async def get_user_public(session: obtain_session, user_id: Annotated[uuid.UUID, Path()]):
     return get_user_by_id(session, user_id)
 
-@router.patch("/users/me", response_model=UserGet)
+@router.patch("/users/me", response_model=UserGetPrivate)
 async def update_user(session: obtain_session, user: get_logged_in_user, updated_user: UserUpdate):
     updated_user_data = updated_user.model_dump(exclude_unset=True)
 
@@ -117,9 +118,9 @@ async def create_listing(session: obtain_session, user: get_logged_in_user, list
 @router.get("/listings", response_model=list[ListingGetWithUser])
 async def query_listings(
     session: obtain_session, 
-    offset: Annotated[int, Query(default=0, ge=0, lt=4294967296)],
-    limit: Annotated[int, Query(default=32, gt=0, le=256)],
-    category: Annotated[ListingCategory | None, Query(default=None)]
+    offset: Annotated[int, Query(ge=0, lt=4294967296)] = 0,
+    limit: Annotated[int, Query(gt=0, le=256)] = 32,
+    category: Annotated[ListingCategory | None, Query()] = None
 ):
     if category is not None:
         query_statement = select(Listing).where(Listing.category == category).offset(offset).limit(limit)

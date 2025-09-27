@@ -1,6 +1,6 @@
 from sqlmodel import create_engine
 
-from app_config import DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
+from .app_config import DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 
 DB_URL = f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 

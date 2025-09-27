@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-CONFIG_FILE_DIR = "../"
+CONFIG_FILE_DIR = "./"
 CONFIG_FILE_NAME = "config.json"
 
 def load_config():
