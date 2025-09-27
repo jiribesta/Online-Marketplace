@@ -50,7 +50,7 @@ class UserCreate(UserBase):
 class UserGetPrivate(UserBase):
     id: uuid.UUID
 
-class UserGetPublic():
+class UserGetPublic(SQLModel):
     username: str = Field(unique=True, min_length=3, max_length=20, regex=r'^[a-zA-Z0-9_]+$', nullable=False)
 
 class UserUpdate(SQLModel):
