@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import logging
 
 CONFIG_FILE_DIR = "./"
 CONFIG_FILE_NAME = "config.json"
@@ -10,8 +11,8 @@ def load_config():
         with open(os.path.join(CONFIG_FILE_DIR, CONFIG_FILE_NAME), "r") as config_file:
             return json.load(config_file)
     except Exception as e:
-        print(f"Unexpected error when obtaining config data: {e}")
-        sys.exit(1)
+        logging.exception("Unexpected error when getting config data: %s", e)
+        raise
 
 def get_abs_or_rel_path(file_path):
     if os.path.isabs(file_path):

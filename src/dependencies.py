@@ -4,6 +4,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
 
+from .logging_config import logger
 from .database import engine
 from .models import User
 
@@ -19,13 +20,14 @@ def get_user_by_token(token: str, session: Annotated[Session, Depends(get_db_ses
         user: User = session.exec(select(User).where(User.session_token == token)).one()
 
     except NoResultFound:
+        logger.info("")
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except MultipleResultsFound:
-        # write to log file as an unexpected error
+    except MultipleResultsFound as mrfe:
+        logger.exception("Multiple users with identical session_token found: %s", mrfe)
         raise
 
     return user

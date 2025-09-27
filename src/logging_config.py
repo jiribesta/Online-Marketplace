@@ -2,7 +2,7 @@ import logging
 
 from .app_config import LOG_FILE_PATH
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
 logger.setLevel(logging.DEBUG)
 

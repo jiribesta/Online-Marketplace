@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
+from .logging_config import logger
 from .models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate, ListingCategory, Listing, ListingCreate, ListingGet, ListingGetWithUser, ListingUpdate
 from .utils import generate_unique_session_token, check_unique_new_user, ensure_unique_user_id, hash_password, authenticate_user, verify_listing_owner, get_user_by_id, get_listing_by_id
 from .dependencies import get_db_session, get_current_user
