@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from src.logging_config import logger
 from src.database import engine
 from src.models import SQLModel  # So we can then .create_all() DB objects
-from src.routes import router
+from src.routes.router_aggregate import router
 
 # Manage startup and shutdown events
 @asynccontextmanager
