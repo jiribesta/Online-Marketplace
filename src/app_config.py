@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 
-CONFIG_FILE_DIR = "./"  # when main.py is run, the program as a whole is in its directory
+CONFIG_FILE_DIR = "./"  # When main.py is run, the program as a whole is in its directory
 CONFIG_FILE_NAME = "config.json"
 
 def load_config():
@@ -28,9 +28,12 @@ DB_HOST = config.get("database", {}).get("db_host", "localhost")
 DB_PORT = config.get("database", {}).get("db_port", 5432)
 DB_NAME = config.get("database", {}).get("db_name", "marketplace")
 
-LOG_FILE_PATH = get_abs_or_rel_path(config.get("log_file_path", "./log.log"))
+log_file_directory_path = get_abs_or_rel_path(config.get("log_file_directory_path", ".")),
+os.makedirs(log_file_directory_path, exist_ok=True)  # Create the directory if it doesn't already exist
+LOG_FILE_PATH = os.path.join(log_file_directory_path, "log.log")
 
 IMAGES_FOLDER_PATH = get_abs_or_rel_path(config.get("images_folder_path", "./images"))
+os.makedirs(IMAGES_FOLDER_PATH, exist_ok=True)
 
 PROFILE_PICTURE_MAX_SIZE = config.get("profile_picture_max_size(MB)", 3)
 LISTING_PICTURE_MAX_SIZE = config.get("listing_picture_max_size(MB)", 10)
