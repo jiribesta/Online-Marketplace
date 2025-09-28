@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
 from ..models import User
-from ..utils import generate_unique_session_token, authenticate_user
+from ..utils.tokens import generate_unique_session_token, authenticate_user
 from ..dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/tokens", tags=["tokens"])

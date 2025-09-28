@@ -6,7 +6,7 @@ from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
 from ..models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate
-from ..utils import check_unique_new_user, ensure_unique_user_id, hash_password, get_user_by_id
+from ..utils.users import check_unique_new_user, ensure_unique_user_id, hash_password, get_user_by_id
 from ..dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path, Query, Response, Depends
 from sqlmodel import Session
 
 from ..models import User, ListingCategory, Listing, ListingCreate, ListingGet, ListingGetWithUser, ListingUpdate
-from ..utils import verify_listing_owner, get_listing_by_id
+from ..utils.listings import verify_listing_owner, get_listing_by_id
 from ..dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/listings", tags=["listings"])
