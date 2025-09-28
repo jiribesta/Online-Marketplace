@@ -2,7 +2,7 @@ from datetime import datetime, date, timezone
 from enum import Enum
 import uuid
 
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr, field_validator, HttpUrl
 from sqlmodel import Field, Relationship, SQLModel
 
 class UserBase(SQLModel):
@@ -25,11 +25,18 @@ class UserBase(SQLModel):
 
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    profile_picture_link: str | None = Field(default=None, regex=r'^[\w-]+$')
     hashed_password: str = Field(nullable=False)
     session_token: str | None = Field(default=None, index=True)
     signup_timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     listings: list["Listing"] = Relationship(back_populates="author", cascade_delete=True)
+
+    @field_validator("profile_picture_link")
+    def check_for_special_url_characters(cls, value):
+        for i in value:
+            if value in {".", ":", "?", "#", "(", ")", "=", "@", "&", "+"}:
+                raise ValueError("Link contains invalid characters")
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
@@ -49,9 +56,23 @@ class UserCreate(UserBase):
 
 class UserGetPrivate(UserBase):
     id: uuid.UUID
+    profile_picture_link: str | None = Field(default=None, regex=r'^[\w-]+$')
+
+    @field_validator("profile_picture_link")
+    def check_for_special_url_characters(cls, value):
+        for i in value:
+            if value in {".", ":", "?", "#", "(", ")", "=", "@", "&", "+"}:
+                raise ValueError("Link contains invalid characters")
 
 class UserGetPublic(SQLModel):
     username: str = Field(unique=True, min_length=3, max_length=20, regex=r'^[a-zA-Z0-9_]+$', nullable=False)
+    profile_picture_link: str | None = Field(default=None, regex=r'^[\w-]+$')
+
+    @field_validator("profile_picture_link")
+    def check_for_special_url_characters(cls, value):
+        for i in value:
+            if value in {".", ":", "?", "#", "(", ")", "=", "@", "&", "+"}:
+                raise ValueError("Link contains invalid characters")
 
 class UserUpdate(SQLModel):
     email: EmailStr | None = None

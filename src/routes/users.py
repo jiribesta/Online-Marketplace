@@ -2,11 +2,14 @@ from typing import Annotated
 import uuid
 
 from fastapi import APIRouter, HTTPException, Path, Header, Response, Depends, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
+from ..app_config import PROFILE_PICTURE_MAX_SIZE, IMAGES_FOLDER_PATH
 from ..models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate
 from ..utils.users import check_unique_new_user, ensure_unique_user_id, hash_password, get_user_by_id
+from ..utils.images import ensure_unique_image_name
 from ..dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -75,6 +78,31 @@ async def delete_user(session: obtain_session, user: get_logged_in_user):
 
     return
 
-@router.post("/me/picture")
-async def upload_profile_picture(picture_file: Annotated[UploadFile, File()], content_lenght: Annotated[int, Header()]):
-    pass
+@router.post("/me/picture", status_code=201)
+async def upload_profile_picture(
+    session: obtain_session, 
+    user: get_logged_in_user, 
+    uploaded_file: Annotated[UploadFile, File()], 
+    content_lenght: Annotated[int, Header()],
+    response: Response
+):
+    if content_lenght > PROFILE_PICTURE_MAX_SIZE * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f"File size must not exceed {PROFILE_PICTURE_MAX_SIZE}MB")
+
+    if uploaded_file.content_type not in {"image/jpeg", "image/png"}:
+        raise HTTPException(status_code=400, detail="File type must be either JPEG or PNG")
+
+    new_picture_name = ensure_unique_image_name(user.username)  # We want the filename to be username+uuid
+    new_picture_path = os.path.join(IMAGES_FOLDER_PATH, new_picture_name)
+
+    with open(new_picture_path, "wb") as new_picture:
+        new_picture.write(await file.read())
+
+    relative_path = f"/images/{new_picture_name}"
+    user.profile_picture_link = relative_path
+
+    session.add(user)
+    session.commit()
+
+    response.headers["Location"] = relative_path
+    return FileResponse(new_picture_path)

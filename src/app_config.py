@@ -28,7 +28,7 @@ DB_HOST = config.get("database", {}).get("db_host", "localhost")
 DB_PORT = config.get("database", {}).get("db_port", 5432)
 DB_NAME = config.get("database", {}).get("db_name", "marketplace")
 
-log_file_directory_path = get_abs_or_rel_path(config.get("log_file_directory_path", ".")),
+log_file_directory_path = get_abs_or_rel_path(config.get("log_file_directory_path", "."))
 os.makedirs(log_file_directory_path, exist_ok=True)  # Create the directory if it doesn't already exist
 LOG_FILE_PATH = os.path.join(log_file_directory_path, "log.log")
 
