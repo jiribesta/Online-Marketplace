@@ -9,5 +9,9 @@
 
     "log_file_path": "./log.log",
     
-    "images_folder_path": "./images"
+    "images_folder_path": "./images",
+
+    "profile_picture_max_size(MB)": 3,
+    "listing_picture_max_size(MB)": 10,
+    "listing_pictures_max_number": 10
 }

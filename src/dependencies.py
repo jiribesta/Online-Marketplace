@@ -20,7 +20,7 @@ def get_user_by_token(token: str, session: Annotated[Session, Depends(get_db_ses
         user: User = session.exec(select(User).where(User.session_token == token)).one()
 
     except NoResultFound:
-        logger.info("")
+        logger.info("Failed attempt to access protected resource")
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials",
