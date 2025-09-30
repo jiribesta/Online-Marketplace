@@ -35,6 +35,8 @@ LOG_FILE_PATH = os.path.join(log_file_directory_path, "log.log")
 IMAGES_FOLDER_PATH = get_abs_or_rel_path(config.get("images_folder_path", "./images"))
 os.makedirs(IMAGES_FOLDER_PATH, exist_ok=True)
 
+IMAGES_ENDPOINT = "/images"
+
 PROFILE_PICTURE_MAX_SIZE = config.get("profile_picture_max_size(MB)", 3)
 LISTING_PICTURE_MAX_SIZE = config.get("listing_picture_max_size(MB)", 10)
 LISTING_PICTURES_MAX_NUMBER = config.get("listing_pictures_max_number", 10)

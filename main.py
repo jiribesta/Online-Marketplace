@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from src.logging_config import logger
-from src.app_config import IMAGES_FOLDER_PATH
+from src.app_config import IMAGES_ENDPOINT, IMAGES_FOLDER_PATH
 from src.database import engine
 from src.models import SQLModel  # So we can then .create_all() DB objects
 from src.routes.router_aggregate import router
@@ -26,6 +26,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Mounting the images directory ensures that GET requests are handled automatically (among other things)
-app.mount("/images", StaticFiles(directory=IMAGES_FOLDER_PATH), name="images")
+app.mount(IMAGES_ENDPOINT, StaticFiles(directory=IMAGES_FOLDER_PATH), name="images")
 
 app.include_router(router)

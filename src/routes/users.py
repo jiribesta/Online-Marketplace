@@ -6,10 +6,11 @@ from fastapi.responses import FileResponse
 from sqlmodel import Session
 from sqlalchemy.exc import IntegrityError
 
-from ..app_config import PROFILE_PICTURE_MAX_SIZE, IMAGES_FOLDER_PATH
+from ..app_config import PROFILE_PICTURE_MAX_SIZE, IMAGES_ENDPOINT, IMAGES_FOLDER_PATH
+from ..logging_config import logger
 from ..models import User, UserCreate, UserGetPrivate, UserGetPublicWithListings, UserUpdate
 from ..utils.users import check_unique_new_user, ensure_unique_user_id, hash_password, get_user_by_id
-from ..utils.images import ensure_unique_image_name
+from ..utils.images import ensure_unique_image_name, delete_profile_picture
 from ..dependencies import get_db_session, get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -61,6 +62,7 @@ async def update_user(session: obtain_session, user: get_logged_in_user, updated
         session.rollback()
         error_message = str(e.orig)
         if "UNIQUE constraint failed" in error_message:
+            logger.info(f"Attempted patch to User model with non-unique data: {error_message}")
             if "email" in error_message:
                 raise HTTPException(status_code=400, detail="Email already exists")
             elif "username" in error_message:
@@ -98,7 +100,50 @@ async def upload_profile_picture(
     with open(new_picture_path, "wb") as new_picture:
         new_picture.write(await file.read())
 
-    relative_path = f"/images/{new_picture_name}"
+    relative_path = f"{IMAGES_ENDPOINT}/{new_picture_name}"
+    user.profile_picture_link = relative_path
+
+    session.add(user)
+    session.commit()
+
+    response.headers["Location"] = relative_path
+    return FileResponse(new_picture_path)
+
+@router.put("/me/picture", status_code=201)
+async def replace_profile_picture(
+    *,
+    session: obtain_session, 
+    user: get_logged_in_user, 
+    uploaded_file: Annotated[UploadFile | None, File()] = None, 
+    content_lenght: Annotated[int | None, Header()] = None,
+    response: Response
+):
+    if content_lenght is None or uploaded_file is None:
+        delete_profile_picture(user)
+        user.profile_picture_link = None
+        
+        session.add(user)
+        session.commit()
+
+        response.status_code = 204
+        return
+    
+    if content_lenght > PROFILE_PICTURE_MAX_SIZE * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f"File size must not exceed {PROFILE_PICTURE_MAX_SIZE}MB")
+
+    if uploaded_file.content_type not in {"image/jpeg", "image/png"}:
+        raise HTTPException(status_code=400, detail="File type must be either JPEG or PNG")
+
+    # If we've got a valid new picture, delete the old one first (if there is one)
+    delete_profile_picture(user)
+
+    new_picture_name = ensure_unique_image_name(user.username)  # We want the filename to be username+uuid
+    new_picture_path = os.path.join(IMAGES_FOLDER_PATH, new_picture_name)
+
+    with open(new_picture_path, "wb") as new_picture:
+        new_picture.write(await file.read())
+
+    relative_path = f"{IMAGES_ENDPOINT}/{new_picture_name}"
     user.profile_picture_link = relative_path
 
     session.add(user)
